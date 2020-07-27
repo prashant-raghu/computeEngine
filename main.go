@@ -12,10 +12,10 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/prashant-raghu/computeEngine/services"
-	"./types"
-
 	"github.com/google/uuid"
+
+	service "github.com/prashant-raghu/computeEngine/services"
+	"github.com/prashant-raghu/computeEngine/types"
 )
 
 type key int
@@ -30,12 +30,9 @@ const (
 )
 
 var (
-	Version      string = ""
-	GitTag       string = ""
-	GitCommit    string = ""
-	GitTreeState string = ""
-	listenAddr   string
-	healthy      int32
+	Version    string = "v1"
+	listenAddr string
+	healthy    int32
 )
 
 func main() {
@@ -44,15 +41,11 @@ func main() {
 
 	logger := log.New(os.Stdout, "http: ", log.LstdFlags)
 
-	logger.Println("Simple go server")
 	logger.Println("Version:", Version)
-	logger.Println("GitTag:", GitTag)
-	logger.Println("GitCommit:", GitCommit)
-	logger.Println("GitTreeState:", GitTreeState)
-
 	logger.Println("Server is starting...")
 
 	router := http.NewServeMux()
+	//Routes
 	router.Handle("/", index())
 	router.Handle("/healthz", service.Healthz(healthy))
 	router.Handle("/execute", execute())
@@ -63,7 +56,7 @@ func main() {
 
 	server := &http.Server{
 		Addr:         listenAddr,
-		Handler:      (tracing(nextRequestID))(logging(logger)(router)),
+		Handler:      (tracing(nextRequestID))(service.Logging(logger, requestIDKey)(router)),
 		ErrorLog:     logger,
 		ReadTimeout:  5 * time.Second,
 		WriteTimeout: 10 * time.Second,
@@ -104,10 +97,6 @@ func index() http.Handler {
 		if r.URL.Path != "/" {
 			http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
 			return
-		}
-		err := r.ParseForm()
-		if err != nil {
-			panic(err)
 		}
 		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 		w.Header().Set("X-Content-Type-Options", "nosniff")
