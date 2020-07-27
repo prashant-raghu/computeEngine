@@ -2,13 +2,11 @@ package handler
 
 import (
 	"fmt"
-	"io/ioutil"
-	"log"
 	"net/http"
-	"os"
 
+	service "../services"
+	types "../types"
 	"github.com/google/uuid"
-	"github.com/prashant-raghu/computeEngine/types"
 )
 
 type Resp struct {
@@ -27,22 +25,14 @@ func Execute() http.Handler {
 		r.ParseForm()
 		_b.Code = r.FormValue("code")
 		dir := uuid.New()
-		_, err := os.Stat(fmt.Sprintf("temp/%s", dir.String()))
-		if os.IsNotExist(err) {
-			errDir := os.MkdirAll("temp/"+dir.String(), 0755)
-			if errDir != nil {
-				log.Fatal(err)
-			}
-		}
-		b, err := ioutil.ReadFile(fmt.Sprintf("%s", "execute.js"))
-		err = ioutil.WriteFile(fmt.Sprintf("temp/%s/%s", dir.String(), "execute.js"), b, 0644)
-		if err != nil {
-			panic(err)
-		}
-		err = ioutil.WriteFile(fmt.Sprintf("temp/%s/%s", dir.String(), "code.js"), []byte(_b.Code), 0644)
-		if err != nil {
-			panic(err)
-		}
+		//Setup directory
+		service.CreateDirectory(dir)
+
+		//Create files
+		service.CopyExecuteJs(dir)
+		service.CreateCodeJs(dir, _b.Code)
+		service.CreateScriptSh(dir, service.StartSh)
+
 		w.WriteHeader(http.StatusOK)
 		resp.status = true
 		resp.message = "response"
