@@ -1,1 +1,0 @@
- sudo docker run --name bea683a8-b418-465b-a8ba-ccf7e4ec2f94 --mount type=bind,source="$(pwd)"/mountPoint/bea683a8-b418-465b-a8ba-ccf7e4ec2f94,target=/app sandbox:v1
