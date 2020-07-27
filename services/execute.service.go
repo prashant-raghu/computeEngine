@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"os/exec"
 
 	"github.com/google/uuid"
 )
@@ -39,7 +40,13 @@ func CreateCodeJs(dir uuid.UUID, code string) {
 }
 
 func CreateScriptSh(dir uuid.UUID, content string) {
-	err := ioutil.WriteFile(fmt.Sprintf("%s/%s/%s", parentDir, dir.String(), "script.sh"), []byte(content), 0644)
+	var scriptDir = fmt.Sprintf("%s/%s/%s", parentDir, dir.String(), "script.sh")
+	err := ioutil.WriteFile(scriptDir, []byte(content), 0644)
+	if err != nil {
+		panic(err)
+	}
+	//CreateExecutable
+	err = exec.Command("chmod", "+x", scriptDir).Run()
 	if err != nil {
 		panic(err)
 	}
