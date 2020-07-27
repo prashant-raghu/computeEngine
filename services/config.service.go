@@ -2,6 +2,6 @@ package service
 
 const (
 	StartSh         string = "node /app/execute.js"
-	DockerImageName string = "SandBox"
+	DockerImageName string = "sandbox"
 	ParentDir       string = "mountPoint"
 )

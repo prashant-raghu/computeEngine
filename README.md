@@ -22,7 +22,7 @@ For each code execution request here is what computeEngine does:
 1\) Build Docker Image from dockerfile 
 ```sh
 $ cd sandbox
-$ docker image build -t SandBox:v1 .
+$ docker image build -t sandbox:v1 .
 ```
 2\) Start the go server
 ```sh
