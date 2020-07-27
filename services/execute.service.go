@@ -62,7 +62,17 @@ func CreateScriptSh(dir uuid.UUID, content string) {
 func RollUpContiner(dir uuid.UUID) {
 	// sudo docker run --name a8b558cf-cacf-4898-9743-b0b02007c059 --mount type=bind,source="$(pwd)"/temp/a8b558cf-cacf-4898-9743-b0b02007c059,target=/app sandbox:v1
 	var toExec string = fmt.Sprintf("./%s/%s/scriptDocker.sh", parentDir, dir.String())
-	println(toExec)
+
 	cmd := exec.Command("/bin/sh", toExec)
 	cmd.Run()
+}
+
+func RetrieveOutTxt(dir uuid.UUID) string {
+	// sudo docker run --name a8b558cf-cacf-4898-9743-b0b02007c059 --mount type=bind,source="$(pwd)"/temp/a8b558cf-cacf-4898-9743-b0b02007c059,target=/app sandbox:v1
+	var toRet string = fmt.Sprintf("./%s/%s/out.txt", parentDir, dir.String())
+	b, err := ioutil.ReadFile(toRet)
+	if err != nil {
+		panic(err)
+	}
+	return string(b)
 }

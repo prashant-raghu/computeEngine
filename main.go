@@ -48,9 +48,9 @@ func main() {
 		Addr:         listenAddr,
 		Handler:      (service.Tracing(nextRequestID, requestIDKey))(service.Logging(logger, requestIDKey)(router)),
 		ErrorLog:     logger,
-		ReadTimeout:  5 * time.Second,
-		WriteTimeout: 10 * time.Second,
-		IdleTimeout:  15 * time.Second,
+		ReadTimeout:  50 * time.Second,
+		WriteTimeout: 100 * time.Second,
+		IdleTimeout:  150 * time.Second,
 	}
 
 	done := make(chan bool)

@@ -2,11 +2,14 @@ package handler
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 
 	service "../services"
 	types "../types"
+
 	"github.com/google/uuid"
+	"github.com/yaacov/observer/observer"
 )
 
 type Resp struct {
@@ -14,17 +17,18 @@ type Resp struct {
 	message string
 }
 
+const (
+	parentDir string = "temp"
+)
+
 func Execute() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		//create temp dir with code.js main.js script.sh//
-		//roll up container
-		//set timeout
-		//add watcher of /out.txt
 		var _b types.Execute
 		var resp Resp
 		r.ParseForm()
 		_b.Code = r.FormValue("code")
 		dir := uuid.New()
+		var toWatch string = fmt.Sprintf("./%s/%s/out.txt", parentDir, dir.String())
 
 		//Setup directory
 		service.CreateDirectory(dir)
@@ -34,12 +38,24 @@ func Execute() http.Handler {
 		service.CreateCodeJs(dir, _b.Code)
 		service.CreateScriptSh(dir, service.StartSh)
 
-		//roll up container and watch for file changes
+		//Add Watcher for file create
+		o := observer.Observer{}
+		err := o.Watch([]string{toWatch})
+		if err != nil {
+			log.Fatal("Error: ", err)
+		}
+		defer o.Close()
+		o.AddListener(func(e interface{}) {
+			if e.(observer.WatchEvent).Op == 2 {
+				w.WriteHeader(http.StatusOK)
+				resp.status = true
+				resp.message = service.RetrieveOutTxt(dir)
+				fmt.Fprintln(w, resp)
+			}
+		})
+
+		//roll up container
 		service.RollUpContiner(dir)
 
-		w.WriteHeader(http.StatusOK)
-		resp.status = true
-		resp.message = "response"
-		fmt.Fprintln(w, resp)
 	})
 }
