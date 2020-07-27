@@ -1,0 +1,13 @@
+# FROM ubuntu:18.04
+# RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.3/install.sh | bash
+# RUN /bin/bash -c "source ~/.bashrc"
+# RUN nvm install 13.2.0
+# CMD node -v
+# # CMD ./app/script.sh
+
+FROM ubuntu:18.04
+RUN apt-get update
+RUN apt-get -y install curl
+RUN curl -sL https://deb.nodesource.com/setup_13.x | bash
+RUN apt-get -y install nodejs
+CMD ./app/script.sh

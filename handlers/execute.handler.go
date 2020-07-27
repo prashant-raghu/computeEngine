@@ -25,6 +25,7 @@ func Execute() http.Handler {
 		r.ParseForm()
 		_b.Code = r.FormValue("code")
 		dir := uuid.New()
+
 		//Setup directory
 		service.CreateDirectory(dir)
 
@@ -32,6 +33,9 @@ func Execute() http.Handler {
 		service.CopyExecuteJs(dir)
 		service.CreateCodeJs(dir, _b.Code)
 		service.CreateScriptSh(dir, service.StartSh)
+
+		//roll up container and watch for file changes
+		service.RollUpContiner(dir)
 
 		w.WriteHeader(http.StatusOK)
 		resp.status = true

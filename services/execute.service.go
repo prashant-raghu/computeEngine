@@ -41,6 +41,7 @@ func CreateCodeJs(dir uuid.UUID, code string) {
 
 func CreateScriptSh(dir uuid.UUID, content string) {
 	var scriptDir = fmt.Sprintf("%s/%s/%s", parentDir, dir.String(), "script.sh")
+	var scriptDockerDir = fmt.Sprintf("%s/%s/%s", parentDir, dir.String(), "scriptDocker.sh")
 	err := ioutil.WriteFile(scriptDir, []byte(content), 0644)
 	if err != nil {
 		panic(err)
@@ -50,4 +51,18 @@ func CreateScriptSh(dir uuid.UUID, content string) {
 	if err != nil {
 		panic(err)
 	}
+	var rollUpBash = fmt.Sprintf(" sudo docker run --name %s --mount type=bind,source=\"$(pwd)\"/%s/%s,target=/app sandbox:v1", dir.String(), parentDir, dir.String())
+	err = ioutil.WriteFile(scriptDockerDir, []byte(rollUpBash), 0644)
+	err = exec.Command("chmod", "+x", scriptDockerDir).Run()
+	if err != nil {
+		panic(err)
+	}
+}
+
+func RollUpContiner(dir uuid.UUID) {
+	// sudo docker run --name a8b558cf-cacf-4898-9743-b0b02007c059 --mount type=bind,source="$(pwd)"/temp/a8b558cf-cacf-4898-9743-b0b02007c059,target=/app sandbox:v1
+	var toExec string = fmt.Sprintf("./%s/%s/scriptDocker.sh", parentDir, dir.String())
+	println(toExec)
+	cmd := exec.Command("/bin/sh", toExec)
+	cmd.Run()
 }

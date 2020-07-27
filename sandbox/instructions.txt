@@ -1,0 +1,7 @@
+1) Create image from Dockerfile, run:
+    docker image build -t SandBox:v1 .
+
+2) To Run a container, run:
+    docker run --name uuidIdentifier \
+     --mount type=bind,source="$(pwd)"/mount,target=/app SandBox:v1
+     docker run --name a8b558cf-cacf-4898-9743-b0b02007c059 --mount type=bind,source=/temp/a8b558cf-cacf-4898-9743-b0b02007c059,target=/app sandbox:v1
