@@ -91,6 +91,7 @@ func index() http.Handler {
 		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 		w.Header().Set("X-Content-Type-Options", "nosniff")
 		w.WriteHeader(http.StatusOK)
+		// err := cmd.Run()
 		fmt.Fprintf(w, "Server is up and running")
 	})
 }
