@@ -11,10 +11,8 @@ import (
 	"sync/atomic"
 	"time"
 
-	// service "github.com/prashant-raghu/computeEngine/services"
 	handler "./handlers"
 	service "./services"
-	// "github.com/prashant-raghu/computeEngine/types"
 )
 
 const (
