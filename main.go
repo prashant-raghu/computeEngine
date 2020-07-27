@@ -12,17 +12,13 @@ import (
 	"sync/atomic"
 	"time"
 
-	// "types"
+	"github.com/prashant-raghu/computeEngine/services"
+	"./types"
+
 	"github.com/google/uuid"
-	"github.com/gorilla/mux"
 )
 
 type key int
-
-type Execute struct {
-	// Age  int
-	code string
-}
 
 type Resp struct {
 	status  bool
@@ -58,8 +54,7 @@ func main() {
 
 	router := http.NewServeMux()
 	router.Handle("/", index())
-	router.Handle("/test", TodoShow())
-	router.Handle("/healthz", healthz())
+	router.Handle("/healthz", service.Healthz(healthy))
 	router.Handle("/execute", execute())
 
 	nextRequestID := func() string {
@@ -68,7 +63,7 @@ func main() {
 
 	server := &http.Server{
 		Addr:         listenAddr,
-		Handler:      tracing(nextRequestID)(logging(logger)(router)),
+		Handler:      (tracing(nextRequestID))(logging(logger)(router)),
 		ErrorLog:     logger,
 		ReadTimeout:  5 * time.Second,
 		WriteTimeout: 10 * time.Second,
@@ -104,37 +99,7 @@ func main() {
 	logger.Println("Server stopped")
 }
 
-func TodoShow() http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
-		todoId := vars["todoId"]
-		fmt.Fprintln(w, "Todo show:", todoId)
-	})
-}
 func index() http.Handler {
-
-	// return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-	// 	r.ParseForm()
-	// 	code := r.FormValue("code")
-	// 	fmt.Fprintf(w, code)
-	// })
-	// return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
-	// 	fmt.Println(r.Body)
-	// 	decoder := json.NewDecoder(r.Body)
-	// 	var data Execute
-	// 	err := decoder.Decode(&data)
-	// 	if err != nil {
-	// 		panic(err)
-	// 	}
-
-	// 	code := data.code
-	// 	fmt.Println(r)
-	// 	fmt.Println(data)
-	// 	fmt.Println(code)
-	// 	fmt.Fprintf(w, code)
-	// })
-
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path != "/" {
 			http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
@@ -148,7 +113,6 @@ func index() http.Handler {
 		w.Header().Set("X-Content-Type-Options", "nosniff")
 		w.WriteHeader(http.StatusOK)
 		fmt.Fprintf(w, "Server up and running")
-		// fmt.Fprintln(w, _b.code)
 	})
 }
 
@@ -158,10 +122,10 @@ func execute() http.Handler {
 		//roll up container
 		//set timeout
 		//add watcher of /out.txt
-		var _b Execute
+		var _b types.Execute
 		var resp Resp
 		r.ParseForm()
-		_b.code = r.FormValue("code")
+		_b.Code = r.FormValue("code")
 		dir := uuid.New()
 		_, err := os.Stat(fmt.Sprintf("temp/%s", dir.String()))
 		if os.IsNotExist(err) {
@@ -175,7 +139,7 @@ func execute() http.Handler {
 		if err != nil {
 			panic(err)
 		}
-		err = ioutil.WriteFile(fmt.Sprintf("temp/%s/%s", dir.String(), "code.js"), []byte(_b.code), 0644)
+		err = ioutil.WriteFile(fmt.Sprintf("temp/%s/%s", dir.String(), "code.js"), []byte(_b.Code), 0644)
 		if err != nil {
 			panic(err)
 		}
@@ -186,15 +150,6 @@ func execute() http.Handler {
 	})
 }
 
-func healthz() http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if atomic.LoadInt32(&healthy) == 1 {
-			w.WriteHeader(http.StatusNoContent)
-			return
-		}
-		w.WriteHeader(http.StatusServiceUnavailable)
-	})
-}
 func logging(logger *log.Logger) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
