@@ -4,7 +4,6 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -12,21 +11,14 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/google/uuid"
-
-	service "github.com/prashant-raghu/computeEngine/services"
-	"github.com/prashant-raghu/computeEngine/types"
+	// service "github.com/prashant-raghu/computeEngine/services"
+	handler "./handlers"
+	service "./services"
+	// "github.com/prashant-raghu/computeEngine/types"
 )
 
-type key int
-
-type Resp struct {
-	status  bool
-	message string
-}
-
 const (
-	requestIDKey key = 0
+	requestIDKey int = 0
 )
 
 var (
@@ -48,7 +40,7 @@ func main() {
 	//Routes
 	router.Handle("/", index())
 	router.Handle("/healthz", service.Healthz(healthy))
-	router.Handle("/execute", execute())
+	router.Handle("/execute", handler.Execute())
 
 	nextRequestID := func() string {
 		return fmt.Sprintf("%d", time.Now().UnixNano())
@@ -56,7 +48,7 @@ func main() {
 
 	server := &http.Server{
 		Addr:         listenAddr,
-		Handler:      (tracing(nextRequestID))(service.Logging(logger, requestIDKey)(router)),
+		Handler:      (service.Tracing(nextRequestID, requestIDKey))(service.Logging(logger, requestIDKey)(router)),
 		ErrorLog:     logger,
 		ReadTimeout:  5 * time.Second,
 		WriteTimeout: 10 * time.Second,
@@ -101,69 +93,6 @@ func index() http.Handler {
 		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 		w.Header().Set("X-Content-Type-Options", "nosniff")
 		w.WriteHeader(http.StatusOK)
-		fmt.Fprintf(w, "Server up and running")
+		fmt.Fprintf(w, "Server is up and running")
 	})
-}
-
-func execute() http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		//create temp dir with code.js main.js script.sh//
-		//roll up container
-		//set timeout
-		//add watcher of /out.txt
-		var _b types.Execute
-		var resp Resp
-		r.ParseForm()
-		_b.Code = r.FormValue("code")
-		dir := uuid.New()
-		_, err := os.Stat(fmt.Sprintf("temp/%s", dir.String()))
-		if os.IsNotExist(err) {
-			errDir := os.MkdirAll("temp/"+dir.String(), 0755)
-			if errDir != nil {
-				log.Fatal(err)
-			}
-		}
-		b, err := ioutil.ReadFile(fmt.Sprintf("%s", "execute.js"))
-		err = ioutil.WriteFile(fmt.Sprintf("temp/%s/%s", dir.String(), "execute.js"), b, 0644)
-		if err != nil {
-			panic(err)
-		}
-		err = ioutil.WriteFile(fmt.Sprintf("temp/%s/%s", dir.String(), "code.js"), []byte(_b.Code), 0644)
-		if err != nil {
-			panic(err)
-		}
-		w.WriteHeader(http.StatusOK)
-		resp.status = true
-		resp.message = "response"
-		fmt.Fprintln(w, resp)
-	})
-}
-
-func logging(logger *log.Logger) func(http.Handler) http.Handler {
-	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			defer func() {
-				requestID, ok := r.Context().Value(requestIDKey).(string)
-				if !ok {
-					requestID = "unknown"
-				}
-				logger.Println(requestID, r.Method, r.URL.Path, r.RemoteAddr, r.UserAgent())
-			}()
-			next.ServeHTTP(w, r)
-		})
-	}
-}
-
-func tracing(nextRequestID func() string) func(http.Handler) http.Handler {
-	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			requestID := r.Header.Get("X-Request-Id")
-			if requestID == "" {
-				requestID = nextRequestID()
-			}
-			ctx := context.WithValue(r.Context(), requestIDKey, requestID)
-			w.Header().Set("X-Request-Id", requestID)
-			next.ServeHTTP(w, r.WithContext(ctx))
-		})
-	}
 }

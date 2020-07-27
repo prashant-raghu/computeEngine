@@ -5,8 +5,6 @@ import (
 	"net/http"
 )
 
-type key int
-
 func Logging(logger *log.Logger, requestIDKey int) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
