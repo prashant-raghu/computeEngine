@@ -1,0 +1,1 @@
+ sudo docker run --name bad6217b-6fe1-41d2-b107-3551e06da70a --mount type=bind,source="$(pwd)"/sharedFolder/bad6217b-6fe1-41d2-b107-3551e06da70a,target=/app sandbox:v1
