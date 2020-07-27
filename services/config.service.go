@@ -1,4 +1,7 @@
 package service
 
-const StartSh string = "node /app/execute.js"
-const DockerImageName string = "SandBox"
+const (
+	StartSh         string = "node /app/execute.js"
+	DockerImageName string = "SandBox"
+	ParentDir       string = "sharedFolder"
+)

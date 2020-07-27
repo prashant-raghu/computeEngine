@@ -17,10 +17,6 @@ type Resp struct {
 	message string
 }
 
-const (
-	parentDir string = "temp"
-)
-
 func Execute() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var _b types.Execute
@@ -28,7 +24,7 @@ func Execute() http.Handler {
 		r.ParseForm()
 		_b.Code = r.FormValue("code")
 		dir := uuid.New()
-		var toWatch string = fmt.Sprintf("./%s/%s/out.txt", parentDir, dir.String())
+		var toWatch string = fmt.Sprintf("./%s/%s/out.txt", service.ParentDir, dir.String())
 
 		//Setup directory
 		service.CreateDirectory(dir)
@@ -50,12 +46,11 @@ func Execute() http.Handler {
 				w.WriteHeader(http.StatusOK)
 				resp.status = true
 				resp.message = service.RetrieveOutTxt(dir)
-				fmt.Fprintln(w, resp)
+				fmt.Fprintln(w, resp.message)
 			}
 		})
 
 		//roll up container
 		service.RollUpContiner(dir)
-
 	})
 }
